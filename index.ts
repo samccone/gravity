@@ -12,8 +12,9 @@ interface Body extends Point {
 };
 
 var bodies:Body[] = [];
-var width = 1000;
-var height= 1000;
+var width =500;
+var height=500;
+var gravityDirection = 1;
 var scheduledTick;
 var ship = {
   radius: 0,
@@ -28,7 +29,7 @@ var canvas = document.createElement('canvas');
 canvas.setAttribute('height', `${height}px`);
 canvas.setAttribute('width', `${width}px`);
 
-document.body.appendChild(canvas);
+document.querySelector('#world').appendChild(canvas);
 
 var ctx = canvas.getContext('2d');
 
@@ -39,7 +40,7 @@ function getDistance(p1:Body, p2:Body) {
 }
 
 function calculateVectorForce(body1:Body, body2:Body):{fX:number, fY:number} {
-  let gravityConstant = 1;
+  let gravityConstant = 0.1 * gravityDirection;
   let distance = getDistance(body1, body2);
 
 
@@ -95,8 +96,8 @@ bodies.push({
 bodies.push({
   x: 100,
   y: 400,
-  mass: 10000,
-  radius: 20,
+  mass: 20000,
+  radius: 40,
 });
 
 
@@ -128,3 +129,5 @@ function tick() {
 }
 
 tick();
+
+document.querySelector('#reverse').addEventListener('click', () => gravityDirection *= -1);

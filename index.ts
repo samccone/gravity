@@ -7,11 +7,22 @@ interface Point {
 interface Body extends Point {
   mass: number;
   radius: number;
+  vX?: number;
+  vY?: number;
 };
+
 var bodies:Body[] = [];
-var width = 500;
-var height= 500;
+var width = 1000;
+var height= 1000;
 var scheduledTick;
+var ship = {
+  radius: 0,
+  mass: 1,
+  x: width/2,
+  y: height - 100,
+  vX: 0,
+  vY: 0,
+};
 
 var canvas = document.createElement('canvas');
 canvas.setAttribute('height', `${height}px`);
@@ -28,7 +39,7 @@ function getDistance(p1:Body, p2:Body) {
 }
 
 function calculateVectorForce(body1:Body, body2:Body):{fX:number, fY:number} {
-  let gravityConstant = 1000;
+  let gravityConstant = 1;
   let distance = getDistance(body1, body2);
 
 
@@ -64,73 +75,56 @@ function drawBodies() {
   });
 }
 
-function drawLine(startX:number) {
-  for(var i = 0; i < height; i+=5) {
-    let pointBody = {
-      x: startX,
-      y: i,
-      mass: 1,
-      radius: 0,
-    };
+function gatherForcesActingOn(body:Body):{fX:number, fY:number} {
+  return bodies.reduce((prev, b) => {
+    let bodyForce = calculateVectorForce(body, b);
+    prev.fX += bodyForce.fX;
+    prev.fY += bodyForce.fY;
 
-    let force = bodies.reduce((prev, b) => {
-      let bodyForce = calculateVectorForce(pointBody, b);
-      prev.fX += bodyForce.fX;
-      prev.fY += bodyForce.fY;
-
-      return prev;
-    }, {fX: 0, fY: 0});
-
-
-    ctx.fillRect(
-      startX + force.fX,
-      i + force.fY,
-      1,
-      1);
-  }
+    return prev;
+  }, {fX: 0, fY: 0});
 }
 
 bodies.push({
-  x: 200,
+  x: width / 2,
+  y: 200,
+  mass: 10000,
+  radius: 20,
+});
+
+bodies.push({
+  x: 100,
   y: 400,
   mass: 10000,
-  radius: 0,
+  radius: 20,
 });
 
 
-function tick() {
-  ctx.fillStyle = 'rgba(255,100,200,0.2)';
-  //ctx.clearRect(0, 0, width, height);
-  for(var i = 0; i < width; i+=5) {
-    drawLine(i);
-  }
-
-  //drawBodies();
-  scheduledTick = undefined;
+function drawShip() {
+  ctx.fillStyle = 'orange';
+  ctx.fillRect(ship.x - 5, ship.y - 5, 10, 10);
 }
 
 
-document.addEventListener('click', () => ctx.clearRect(0, 0, width, height));
-document.addEventListener('tap', () => ctx.clearRect(0, 0, width, height));
+function updateShipVelocity() {
+  ship.x += ship.vX;
+  ship.y += ship.vY;
 
+  let shipForces = gatherForcesActingOn(ship);
 
+  ship.vX += shipForces.fX;
+  ship.vY += shipForces.fY;
+}
 
-canvas.addEventListener('touchmove', function(e:TouchEvent) {
-  bodies[0].x = e.touches[0].clientX;
-  bodies[0].y = e.touches[0].clientY;
+function tick() {
+  ctx.clearRect(0, 0, width, height);
 
+  ctx.fillStyle = 'black';
 
-  if (!scheduledTick) {
-    scheduledTick = requestAnimationFrame(tick);
-  }
-});
+  drawBodies();
+  drawShip();
+  updateShipVelocity();
+  window.requestAnimationFrame(tick);
+}
 
-canvas.addEventListener('mousemove', function(e:MouseEvent) {
-  bodies[0].x = e.x;
-  bodies[0].y = e.y;
-
-
-  if (!scheduledTick) {
-    scheduledTick = requestAnimationFrame(tick);
-  }
-});
+tick();

@@ -3,7 +3,6 @@ interface Point {
   y: number;
 };
 
-
 interface Body extends Point {
   mass: number;
   radius: number;
